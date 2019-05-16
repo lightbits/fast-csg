@@ -94,8 +94,8 @@ enum { max_instructions_per_block = 64 };
 struct instruction_block_t
 // An instruction block is a list of instructions that implements a single basic
 // AST opcode, either a primitive or an operator. During code generation (parsing
-// the AST), we create a list of instruction blocks, evaluating the AST
-// bottom-up. During this, we assign to each block up to three register addresses.
+// the AST), we create a list of instruction blocks, evaluating the AST bottom-up.
+// During this, we assign to each block up to three register addresses.
 // A destination register, where the output of the block is to be stored, and
 // a left- and right-child register (for boolean operators).
 {

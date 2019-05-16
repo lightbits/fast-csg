@@ -1,42 +1,40 @@
 #pragma once
 #include "ast.h"
 
-namespace ast_builder {
-
 /*
 FRep primitives
 */
-ast_t *fBox(float width, float height, float depth) {
-    ast_t *f = ast_calloc();
+frep_t *fBox(float width, float height, float depth) {
+    frep_t *f = frep_calloc();
     f->opcode = AST_BOX;
     f->box.width = width;
     f->box.height = height;
     f->box.depth = depth;
     return f;
 }
-ast_t *fBoxCheap(float width, float height, float depth) {
-    ast_t *f = ast_calloc();
+frep_t *fBoxCheap(float width, float height, float depth) {
+    frep_t *f = frep_calloc();
     f->opcode = AST_BOX_CHEAP;
     f->box.width = width;
     f->box.height = height;
     f->box.depth = depth;
     return f;
 }
-ast_t *fSphere(float radius) {
-    ast_t *f = ast_calloc();
+frep_t *fSphere(float radius) {
+    frep_t *f = frep_calloc();
     f->opcode = AST_SPHERE;
     f->sphere.radius = radius;
     return f;
 }
-ast_t *fCylinder(float radius, float height) {
-    ast_t *f = ast_calloc();
+frep_t *fCylinder(float radius, float height) {
+    frep_t *f = frep_calloc();
     f->opcode = AST_CYLINDER;
     f->cylinder.radius = radius;
     f->cylinder.height = height;
     return f;
 }
-ast_t *fPlane(float sign, float offset) {
-    ast_t *f = ast_calloc();
+frep_t *fPlane(float sign, float offset) {
+    frep_t *f = frep_calloc();
     f->opcode = AST_PLANE;
     f->plane.sign = sign;
     f->plane.offset = offset;
@@ -46,22 +44,22 @@ ast_t *fPlane(float sign, float offset) {
 /*
 Function operators
 */
-ast_t *fOpUnion(ast_t *left, ast_t *right) {
-    ast_t *f = ast_calloc();
+frep_t *fOpUnion(frep_t *left, frep_t *right) {
+    frep_t *f = frep_calloc();
     f->opcode = AST_UNION;
     f->left = left;
     f->right = right;
     return f;
 }
-ast_t *fOpSubtract(ast_t *left, ast_t *right) {
-    ast_t *f = ast_calloc();
+frep_t *fOpSubtract(frep_t *left, frep_t *right) {
+    frep_t *f = frep_calloc();
     f->opcode = AST_SUBTRACT;
     f->left = left;
     f->right = right;
     return f;
 }
-ast_t *fOpIntersect(ast_t *left, ast_t *right) {
-    ast_t *f = ast_calloc();
+frep_t *fOpIntersect(frep_t *left, frep_t *right) {
+    frep_t *f = frep_calloc();
     f->opcode = AST_INTERSECT;
     f->left = left;
     f->right = right;
@@ -71,13 +69,13 @@ ast_t *fOpIntersect(ast_t *left, ast_t *right) {
 /*
 Spatial operators
 */
-ast_t *pOpRotate(ast_t *f, float rx, float ry, float rz) {
+frep_t *pOpRotate(frep_t *f, float rx, float ry, float rz) {
     f->rx = rx;
     f->ry = ry;
     f->rz = rz;
     return f;
 }
-ast_t *pOpTranslate(ast_t *f, float tx, float ty, float tz) {
+frep_t *pOpTranslate(frep_t *f, float tx, float ty, float tz) {
     f->tx = tx;
     f->ty = ty;
     f->tz = tz;
