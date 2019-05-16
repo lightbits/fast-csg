@@ -1,0 +1,38 @@
+.version 6.0
+.target sm_60
+.address_size 64
+
+.func (.reg.f32 result) test1(.reg.f32 x, .reg.f32 y, .reg.f32 z)
+{
+    mul.ftz.f32 result, x, x;
+    fma.rn.ftz.f32 result, y, y, result;
+    fma.rn.ftz.f32 result, z, z, result;
+    sqrt.approx.ftz.f32 result, result;
+    ret.uni;
+}
+
+
+.visible .entry test(.param.u64 input_address, .param.u64 output_address)
+{
+    .reg .f32   x,y,z,w;
+    .reg .b32   %r<5>;
+    .reg .b64   %rd<9>;
+    .reg.f32 result;
+
+    ld.param.u64        %rd1, [input_address];
+    ld.param.u64        %rd2, [output_address];
+    cvta.to.global.u64  %rd3, %rd2;
+    cvta.to.global.u64  %rd4, %rd1;
+    mov.u32             %r1, %tid.x;        // threadIdx.x
+    mov.u32             %r2, %ctaid.x;      // blockIdx.x
+    mov.u32             %r3, %ntid.x;       // blockDim.x
+    mad.lo.s32          %r4, %r3, %r2, %r1; // blockDim.x*blockIdx.x + threadIdx.x
+    mul.wide.s32        %rd5, %r4, 16;      // sizeof(float)*4*(blockDim.x*blockIdx.x + threadIdx.x)
+    add.s64             %rd6, %rd4, %rd5;   // input_address_global + sizeof(float)*4*(...)
+    mul.wide.s32        %rd7, %r4, 4;       // sizeof(float)*1*(blockDim.x*blockIdx.x + threadIdx.)
+    add.s64             %rd8, %rd3, %rd7;   // output_address_global + sizeof(float)*1*(...)
+    ld.global.v4.f32    {x, y, z, w}, [%rd6];
+
+    call.uni (result), test1, (x,y,z);
+    st.global.f32 [%rd8], result;
+}

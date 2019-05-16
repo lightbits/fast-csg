@@ -1,0 +1,220 @@
+	.headerflags	@"EF_CUDA_TEXMODE_UNIFIED EF_CUDA_64BIT_ADDRESS EF_CUDA_SW_1729687 EF_CUDA_SM60 EF_CUDA_VIRTUAL_SM(EF_CUDA_SM60)"
+
+
+//--------------------- .nv.info                  --------------------------
+	.section	.nv.info,"",@"SHT_CUDA_INFO"
+	.align	4
+
+
+	//----- nvinfo : EIATTR_MAX_STACK_SIZE
+	.align		4
+        /*0000*/ 	.byte	0x04, 0x23
+        /*0002*/ 	.short	(.L_3 - .L_2)
+	.align		4
+.L_2:
+        /*0004*/ 	.word	index@(_Z4testPKfPf)
+        /*0008*/ 	.word	0x00000000
+
+
+	//----- nvinfo : EIATTR_MIN_STACK_SIZE
+	.align		4
+.L_3:
+        /*000c*/ 	.byte	0x04, 0x12
+        /*000e*/ 	.short	(.L_5 - .L_4)
+	.align		4
+.L_4:
+        /*0010*/ 	.word	index@(_Z4testPKfPf)
+        /*0014*/ 	.word	0x00000000
+
+
+	//----- nvinfo : EIATTR_FRAME_SIZE
+	.align		4
+.L_5:
+        /*0018*/ 	.byte	0x04, 0x11
+        /*001a*/ 	.short	(.L_7 - .L_6)
+	.align		4
+.L_6:
+        /*001c*/ 	.word	index@(_Z4testPKfPf)
+        /*0020*/ 	.word	0x00000000
+.L_7:
+
+
+//--------------------- .nv.info._Z4testPKfPf     --------------------------
+	.section	.nv.info._Z4testPKfPf,"",@"SHT_CUDA_INFO"
+	.align	4
+
+
+	//----- nvinfo : EIATTR_SW1850030_WAR
+	.align		4
+        /*0000*/ 	.byte	0x01, 0x2a
+	.zero		2
+
+
+	//----- nvinfo : EIATTR_PARAM_CBANK
+	.align		4
+        /*0004*/ 	.byte	0x04, 0x0a
+        /*0006*/ 	.short	(.L_9 - .L_8)
+	.align		4
+.L_8:
+        /*0008*/ 	.word	index@(.nv.constant0._Z4testPKfPf)
+        /*000c*/ 	.short	0x0140
+        /*000e*/ 	.short	0x0010
+
+
+	//----- nvinfo : EIATTR_CBANK_PARAM_SIZE
+	.align		4
+.L_9:
+        /*0010*/ 	.byte	0x03, 0x19
+        /*0012*/ 	.short	0x0010
+
+
+	//----- nvinfo : EIATTR_KPARAM_INFO
+	.align		4
+        /*0014*/ 	.byte	0x04, 0x17
+        /*0016*/ 	.short	(.L_11 - .L_10)
+.L_10:
+        /*0018*/ 	.word	0x00000000
+        /*001c*/ 	.short	0x0001
+        /*001e*/ 	.short	0x0008
+        /*0020*/ 	.byte	0x00, 0xf0, 0x21, 0x00
+
+
+	//----- nvinfo : EIATTR_KPARAM_INFO
+	.align		4
+.L_11:
+        /*0024*/ 	.byte	0x04, 0x17
+        /*0026*/ 	.short	(.L_13 - .L_12)
+.L_12:
+        /*0028*/ 	.word	0x00000000
+        /*002c*/ 	.short	0x0000
+        /*002e*/ 	.short	0x0000
+        /*0030*/ 	.byte	0x00, 0xf0, 0x21, 0x00
+
+
+	//----- nvinfo : EIATTR_MAXREG_COUNT
+	.align		4
+.L_13:
+        /*0034*/ 	.byte	0x03, 0x1b
+        /*0036*/ 	.short	0x00ff
+
+
+	//----- nvinfo : EIATTR_S2RCTAID_INSTR_OFFSETS
+	.align		4
+        /*0038*/ 	.byte	0x04, 0x1d
+        /*003a*/ 	.short	(.L_15 - .L_14)
+
+
+	//   ....[0]....
+.L_14:
+        /*003c*/ 	.word	0x00000018
+
+
+	//----- nvinfo : EIATTR_EXIT_INSTR_OFFSETS
+	.align		4
+.L_15:
+        /*0040*/ 	.byte	0x04, 0x1c
+        /*0042*/ 	.short	(.L_17 - .L_16)
+
+
+	//   ....[0]....
+.L_16:
+        /*0044*/ 	.word	0x00000218
+.L_17:
+
+
+//--------------------- .nv.constant2._Z4testPKfPf --------------------------
+	.section	.nv.constant2._Z4testPKfPf,"a",@progbits
+	.align	4
+.nv.constant2._Z4testPKfPf:
+        /*0000*/ 	.byte	0x33, 0x33, 0x33, 0x3f
+
+
+//--------------------- .nv.constant0._Z4testPKfPf --------------------------
+	.section	.nv.constant0._Z4testPKfPf,"a",@progbits
+	.align	4
+.nv.constant0._Z4testPKfPf:
+	.zero		336
+
+
+//--------------------- .text._Z4testPKfPf        --------------------------
+	.section	.text._Z4testPKfPf,"ax",@progbits
+	.sectioninfo	@"SHI_REGISTERS=16"
+	.align	32
+        .global         _Z4testPKfPf
+        .type           _Z4testPKfPf,@function
+        .size           _Z4testPKfPf,(.L_18 - _Z4testPKfPf)
+        .other          _Z4testPKfPf,@"STO_CUDA_ENTRY STV_DEFAULT"
+_Z4testPKfPf:
+.text._Z4testPKfPf:
+                                                                                                  /* 0x001c7c00e22007f6 */
+        /*0008*/                   MOV R1, c[0x0][0x20];                                          /* 0x4c98078000870001 */
+        /*0010*/                   S2R R0, SR_TID.X;                                              /* 0xf0c8000002170000 */
+        /*0018*/                   S2R R2, SR_CTAID.X;                                            /* 0xf0c8000002570002 */
+                                                                                                  /* 0x001fd800fcc00fe1 */
+        /*0028*/                   XMAD R0, R2, c[0x0] [0x8], R0;                                 /* 0x4e00000000270200 */
+        /*0030*/                   XMAD.MRG R3, R2, c[0x0] [0x8].H1, RZ;                          /* 0x4f107f8000270203 */
+        /*0038*/                   XMAD.PSL.CBCC R0, R2.H1, R3.H1, R0;                            /* 0x5b30001800370200 */
+                                                                                                  /* 0x001f9800fca207f1 */
+        /*0048*/                   SHL R2, R0.reuse, 0x2;                                         /* 0x3848000000270002 */
+        /*0050*/                   SHR R0, R0, 0x1e;                                              /* 0x3829000001e70000 */
+        /*0058*/                   IADD R4.CC, R2, c[0x0][0x140];                                 /* 0x4c10800005070204 */
+                                                                                                  /* 0x001f98000e2007e2 */
+        /*0068*/                   IADD.X R5, R0, c[0x0][0x144];                                  /* 0x4c10080005170005 */
+        /*0070*/                   LDG.E R4, [R4];                                                /* 0xeed4200000070404 */
+        /*0078*/                   IADD R2.CC, R2, c[0x0][0x148];                                 /* 0x4c10800005270202 */
+                                                                                                  /* 0x001c4448fe0007e1 */
+        /*0088*/                   IADD.X R3, R0, c[0x0][0x14c];                                  /* 0x4c10080005370003 */
+        /*0090*/         {         FMUL.FTZ R12, R4.reuse, 0.5;                                   /* 0x3868103f0007040c */
+        /*0098*/                   F2F.FTZ.F32.F32.FLOOR R13, R4;        }                        /* 0x5ca8148000470a0d */
+                                                                                                  /* 0x081fc0003e2207f0 */
+        /*00a8*/         {         FADD.FTZ R0, R4.reuse, 0.5;                                    /* 0x3858103f00070400 */
+        /*00b0*/                   STG.E [R2], R4;        }                                       /* 0xeedc200000070204 */
+        /*00b8*/         {         FADD.FTZ R7, R4.reuse, 0.69921875;                             /* 0x3858103f33070407 */
+        /*00c8*/                   F2F.FTZ.F32.F32.FLOOR R15, R12;        }                       /* 0x0013c440fe000271 */
+                                                                                                  /* 0x5ca8148000c70a0f */
+        /*00d0*/         {         FADD32I.FTZ R8, R4.reuse, 0.69999998807907104492;              /* 0x0883f33333370408 */
+        /*00d8*/                   STG.E [R2+0x10], R0;        }                                  /* 0xeedc200001070200 */
+                                                                                                  /* 0x081fc000be2207f0 */
+        /*00e8*/         {         FADD.FTZ R9, |R4|.reuse, 0.5;                                  /* 0x3858503f00070409 */
+        /*00f0*/                   STG.E [R2+0x20], R7;        }                                  /* 0xeedc200002070207 */
+        /*00f8*/         {         FADD.FTZ R5, |R4|.reuse, 0.69921875;                           /* 0x3858503f33070405 */
+        /*0108*/                   STG.E [R2+0x30], R8;        }                                  /* 0x000bc440fe0005f1 */
+                                                                                                  /* 0xeedc200003070208 */
+        /*0110*/         {         FADD32I.FTZ R11, |R4|.reuse, 0.69999998807907104492;           /* 0x08c3f3333337040b */
+        /*0118*/                   STG.E [R2+0x40], R9;        }                                  /* 0xeedc200004070209 */
+                                                                                                  /* 0x000bc4005e2002f1 */
+        /*0128*/                   STG.E [R2+0x50], R5;                                           /* 0xeedc200005070205 */
+        /*0130*/                   STG.E [R2+0x60], R11;                                          /* 0xeedc20000607020b */
+        /*0138*/                   STG.E [R2+0x70], R12;                                          /* 0xeedc20000707020c */
+                                                                                                  /* 0x0107c850fe0009f1 */
+        /*0148*/                   STG.E [R2+0x100], R13;                                         /* 0xeedc20001007020d */
+        /*0150*/         {         FMUL.FTZ R0, R4.reuse, 0.69921875;                             /* 0x3868103f33070400 */
+        /*0158*/                   STG.E [R2+0x110], R15;        }                                /* 0xeedc20001107020f */
+                                                                                                  /* 0x081fc0001e4307f0 */
+        /*0168*/         {         FMUL32I.FTZ R7, R4.reuse, 0.69999998807907104492;              /* 0x1e23f33333370407 */
+        /*0170*/                   STG.E [R2+0x80], R0;        }                                  /* 0xeedc200008070200 */
+        /*0178*/         {         FMNMX.FTZ R8, R4.reuse, 0.5, !PT;                              /* 0x386017bf00070408 */
+        /*0188*/                   STG.E [R2+0x90], R7;        }                                  /* 0x0007c844fe0003f2 */
+                                                                                                  /* 0xeedc200009070207 */
+        /*0190*/         {         FMNMX.FTZ R5, R4.reuse, 0.69921875, !PT;                       /* 0x386017bf33070405 */
+        /*0198*/                   STG.E [R2+0xa0], R8;        }                                  /* 0xeedc20000a070208 */
+                                                                                                  /* 0x081fc0003e4207f0 */
+        /*01a8*/         {         FMNMX.FTZ R9, R4.reuse, c[0x2][0x0], !PT;                      /* 0x4c60178800070409 */
+        /*01b0*/                   STG.E [R2+0xb0], R5;        }                                  /* 0xeedc20000b070205 */
+        /*01b8*/         {         FMNMX.FTZ R11, R4.reuse, 0.5, PT;                              /* 0x386013bf0007040b */
+        /*01c8*/                   STG.E [R2+0xc0], R9;        }                                  /* 0x0007f400fe0001f2 */
+                                                                                                  /* 0xeedc20000c070209 */
+        /*01d0*/         {         FMNMX.FTZ R12, R4, 0.69921875, PT;                             /* 0x386013bf3307040c */
+        /*01d8*/                   STG.E [R2+0xd0], R11;        }                                 /* 0xeedc20000d07020b */
+                                                                                                  /* 0x011fc0003e420ff0 */
+        /*01e8*/         {         FMNMX.FTZ R0, R4.reuse, c[0x2][0x0], PT;                       /* 0x4c60138800070400 */
+        /*01f0*/                   STG.E [R2+0xe0], R12;        }                                 /* 0xeedc20000e07020c */
+        /*01f8*/         {         FMUL.FTZ.RM R7, R4, 0.5;                                       /* 0x386810bf00070407 */
+        /*0208*/                   STG.E [R2+0xf0], R0;        }                                  /* 0x001ffc003e2001f2 */
+                                                                                                  /* 0xeedc20000f070200 */
+        /*0210*/                   STG.E [R2+0x120], R7;                                          /* 0xeedc200012070207 */
+        /*0218*/                   EXIT;                                                          /* 0xe30000000007000f */
+.L_1:
+                                                                                                  /* 0x001f8000fc0007ff */
+        /*0228*/                   BRA `(.L_1);                                                   /* 0xe2400fffff07000f */
+.L_18:
