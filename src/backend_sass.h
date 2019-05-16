@@ -7,9 +7,6 @@
 #pragma once
 #include <stdint.h>
 
-namespace backend {
-namespace sass {
-
 enum latency_constants_
 {
     // All the 32-bit floating point instructions (except sqrt) take exactly
@@ -459,9 +456,9 @@ _generate_sass(instruction_block_t *blocks,
 
     frep_mat3_t R_root_to_this;
     frep_vec3_t T_this_rel_root;
-    frep_computeGlobalTransform(node, &R_root_to_this, &T_this_rel_root, R_root_to_parent, T_parent_rel_root);
+    frep_get_global_transform(node, &R_root_to_this, &T_this_rel_root, R_root_to_parent, T_parent_rel_root);
 
-    if (frep_isBoolean(node))
+    if (frep_is_boolean(node))
     {
         assert(node->left);
         assert(node->right);
@@ -482,7 +479,7 @@ _generate_sass(instruction_block_t *blocks,
         else if (node->opcode == FREP_BLEND)     emit_blend(b, node->blend.alpha);
         assert(num_blocks <= max_instruction_blocks);
     }
-    else if (frep_isPrimitive(node))
+    else if (frep_is_primitive(node))
     {
         instruction_block_t *b = &blocks[num_blocks++];
         b->num_instructions = 0;
@@ -519,7 +516,4 @@ instruction_blocks_t generate_sass(frep_t *node)
     result.blocks = blocks;
     result.num_blocks = num_blocks;
     return result;
-}
-
-}
 }

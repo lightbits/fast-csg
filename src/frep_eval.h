@@ -38,7 +38,7 @@ float frep_eval(frep_t *f, float x, float y, float z)
 
     switch (f->opcode)
     {
-        case AST_BOX:
+        case FREP_BOX:
         {
             float dx = fabsf(x) - f->box.width;
             float dy = fabsf(y) - f->box.height;
@@ -51,7 +51,7 @@ float frep_eval(frep_t *f, float x, float y, float z)
             if (dz < 0.0f) dz = 0.0f;
             return sqrtf(dx*dx + dy*dy + dz*dz) + b;
         }
-        case AST_BOX_CHEAP:
+        case FREP_BOX_CHEAP:
         {
             float dx = fabsf(x) - f->box.width;
             float dy = fabsf(y) - f->box.height;
@@ -61,40 +61,40 @@ float frep_eval(frep_t *f, float x, float y, float z)
             if (dz > d) d = dz;
             return d;
         }
-        case AST_SPHERE:
+        case FREP_SPHERE:
         {
             return sqrtf(x*x + y*y + z*z) - f->sphere.radius;
         }
-        case AST_CYLINDER:
+        case FREP_CYLINDER:
         {
             float a = sqrtf(x*x + z*z) - f->cylinder.radius;
             float b = fabsf(y) - f->cylinder.height;
             return a > b ? a : b;
         }
-        case AST_PLANE:
+        case FREP_PLANE:
         {
             return f->plane.sign*x - f->plane.offset;
         }
-        case AST_UNION:
+        case FREP_UNION:
         {
             float f1 = frep_eval(f->left, x, y, z);
             float f2 = frep_eval(f->right, x, y, z);
             return f1 < f2 ? f1 : f2;
         }
-        case AST_INTERSECT:
+        case FREP_INTERSECT:
         {
             float f1 = frep_eval(f->left, x, y, z);
             float f2 = frep_eval(f->right, x, y, z);
             return f1 > f2 ? f1 : f2;
         }
-        case AST_SUBTRACT:
+        case FREP_SUBTRACT:
         {
             float f1 = frep_eval(f->left, x, y, z);
             float f2 = -frep_eval(f->right, x, y, z);
             return f1 > f2 ? f1 : f2;
         }
         #if 0
-        case AST_BLEND:
+        case FREP_BLEND:
         {
             float f1 = frep_eval(f->left, x, y, z);
             float f2 = frep_eval(f->right, x, y, z);
