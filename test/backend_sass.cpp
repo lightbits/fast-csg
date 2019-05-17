@@ -26,7 +26,8 @@ void run_test(int test_number, frep_t *tree)
     int num_instructions;
     instruction_t *instructions = schedule_blocks(blocks, &num_instructions);
 
-    printf("%d. running test...\n", test_number);
+    printf("///////////////////////////////////////////////////\n");
+    printf("                 test number %d\n", test_number);
 
     frep_eval_sass(0.0f,0.0f,0.0f, instructions, num_instructions, true);
 
