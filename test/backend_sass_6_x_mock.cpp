@@ -6,7 +6,7 @@
 #include "../src/frep_builder.h"
 #include "../src/frep_eval.h"
 #include "../src/backend_sass.h"
-#include "util/sass_simulator.h"
+#include "util/sass_6_x_mock.h"
 
 float frep_eval_sass(float x0, float y0, float z0, instruction_t *instructions, int num_instructions, bool debug=false)
 {
