@@ -310,11 +310,12 @@ int _generate_ptx(
 
 char *generate_ptx(frep_t *node, int *result_register)
 {
+    using namespace backend_ptx;
     static char *buffer = (char*)malloc(10*1024*1024);
     assert(buffer && "Failed to allocate buffer to contain PTX output");
-    backend_ptx::ptx_t s;
+    ptx_t s;
     s.stream = buffer;
     s.next_register = 0;
-    *result_register = backend_ptx::_generate_ptx(node, s);
+    *result_register = _generate_ptx(node, s);
     return buffer;
 }
