@@ -1,11 +1,32 @@
+// Developed by Simen Haugo.
+// See LICENSE.txt for copyright and licensing details (standard MIT License).
+
 // This file contains the machine code generation backend for NVIDIA Maxwell/Pascal
-// architectures. Unlike the ptx backend, this directly outputs to SASS binary that
+// architectures. Unlike the PTX backend, this directly outputs to SASS binary that
 // can be patched into an existing Cubin binary module, and loaded immediately with
-// the Cuda Driver API. This avoids the slow ptx compiler provided in CUDA, at the
+// the Cuda Driver API. This avoids the slow PTX compiler provided in CUDA, at the
 // expense of less optimization and a worse register allocation strategy.
 
+// SASS code generation consists of the following major steps
+//
+// 1. Generate instruction blocks
+//      the input frep tree is parsed to produce independent sequences of temporary
+//      SASS instructions (not binary). These are assigned virtual register names,
+//      which must be assigned to physical registers in the next step.
+//
+// 2. Schedule instructions and assign physical registers
+//
+// 3. Generate SASS binary
+//      With the physical registers assigned, we can now generate the actual binary
+//      instructions that go into the final ELF executable.
+//
+// 4. Link SASS ELF executable (a "Cubin" module)
+//
+
 #pragma once
+#include "frep.h"
 #include <stdint.h>
+#include <assert.h>
 
 enum latency_constants_
 {
@@ -423,7 +444,6 @@ void emit_blend(instruction_block_t *block, float alpha)
     CLEAR(); TYPE(FFMA20I); RD(D); RA(D_RIGHT); IMMB(1.0f-alpha); RC(D); NEXT(); // FFMA d, d_right, (1-alpha), d
 }
 
-
 #undef TYPE
 #undef RA
 #undef RB
@@ -435,15 +455,7 @@ void emit_blend(instruction_block_t *block, float alpha)
 #undef CLEAR
 
 void
-frep_sass_to_cubin(instruction_blocks_t blocks)
-{
-    // assign physical register addresses
-    // emit control statements
-    // count max register usage
-}
-
-void
-_generate_sass(instruction_block_t *blocks,
+_generate_sass_blocks(instruction_block_t *blocks,
                int &num_blocks,
                frep_t *node,
                int destination,
@@ -465,8 +477,8 @@ _generate_sass(instruction_block_t *blocks,
 
         int d_left = destination;
         int d_right = destination+1;
-        _generate_sass(blocks, num_blocks, node->left, d_left, R_root_to_this, T_this_rel_root);
-        _generate_sass(blocks, num_blocks, node->right, d_right, R_root_to_this, T_this_rel_root);
+        _generate_sass_blocks(blocks, num_blocks, node->left, d_left, R_root_to_this, T_this_rel_root);
+        _generate_sass_blocks(blocks, num_blocks, node->right, d_right, R_root_to_this, T_this_rel_root);
 
         instruction_block_t *b = &blocks[num_blocks++];
         b->num_instructions = 0;
@@ -499,7 +511,7 @@ _generate_sass(instruction_block_t *blocks,
     }
 }
 
-instruction_blocks_t generate_sass(frep_t *node)
+instruction_blocks_t generate_sass_blocks(frep_t *node)
 // This function generates a list of instruction blocks that evaluates the
 // tree and stores the resulting distance value in register[0]. Each block
 // is assigned registers during the recursive tree parsing.
@@ -510,7 +522,7 @@ instruction_blocks_t generate_sass(frep_t *node)
     int num_blocks = 0;
     int destination = 0;
 
-    _generate_sass(blocks, num_blocks, node, destination);
+    _generate_sass_blocks(blocks, num_blocks, node, destination);
 
     instruction_blocks_t result;
     result.blocks = blocks;
