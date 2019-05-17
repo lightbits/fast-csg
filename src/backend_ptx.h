@@ -1,19 +1,36 @@
 // Developed by Simen Haugo.
 // See LICENSE.txt for copyright and licensing details (standard MIT License).
 
-// This file contains the code generation backend for NVIDIA PTX, which is *not* a
-// machine code target, but described by NVIDIA as a "stable programming model and
-// instruction set for general purpose parallel programming". It is text-based code,
-// which is compiled into native target-architecture instructions by the CUDA driver.
-// Note that this compilation can take a long time. If you want to be able to rapidly
-// compile and upload FRep ASTs onto the GPU, have a look at the SASS backend, where
-// we implement our own native machine code generation.
+/*
+This is the code generation backend for NVIDIA PTX, which is not
+a machine code target, but a fake assembly language (stored as text)
+which gets compiled into native target-architecture instructions by
+the CUDA driver. Note that this compilation can take a long time.
+If you need to be able to rapidly compile and upload trees to the
+GPU, look at the SASS backend, where we implement our own native
+machine code generation.
+*/
 
 #pragma once
 
 #include "frep.h"
 #include <stdint.h>
 #include <assert.h>
+
+/*
+Generates a string containing newline-seperated PTX instructions
+which evaluate f(x0, y0, z0) and stores the result in a register
+named "f%d" % result_register (e.g. "f3"). The input coordinates
+are assumed to be in registers named "x0", "y0", and "z0".
+
+See test/backend_ptx.cpp for an example of a complete PTX program
+that uses the generated output.
+*/
+char *generate_ptx(frep_t *f, int *result_register);
+
+//////////////////////////////////////////////////////////////////
+//                       Implementation
+//////////////////////////////////////////////////////////////////
 
 namespace backend_ptx {
 
@@ -25,10 +42,12 @@ can either be placed in Constants Memory (and must be fetched with
 an additional load), or be baked directly into the instructions.
 
 For example, the PTX instruction
-    add.ftz.f32 x, x, 0fBF000000;
-computes
-    x <- x + (-0.5)
-where (-0.5) is provided as an immediate value.
+    add.ftz.f32 x, x, 0f3F000000; // x <- x + 0.5
+uses +0.5 as an immediate value. In the generated machine code for
+e.g. Maxwell architectures, this instruction may look like this:
+    0x3858503f00070409
+            ^^^^^
+        immediate value (note that last 12 bits are truncated).
 
 However, not all instructions can use full 32-bit floating point
 immediate values. Notably, min, max and fused-multiply-add (FFMA)
@@ -263,36 +282,39 @@ int _generate_ptx(
         assert(node->right);
         int left = _generate_ptx(node->left, state, R_root_to_this, T_this_rel_root);
         int right = _generate_ptx(node->right, state, R_root_to_this, T_this_rel_root);
-             if (node->opcode == FREP_UNION)         result = emit_union(state, left, right);
-        else if (node->opcode == FREP_INTERSECT)     result = emit_intersect(state, left, right);
-        else if (node->opcode == FREP_SUBTRACT)      result = emit_subtract(state, left, right);
-        else if (node->opcode == FREP_BLEND)         result = emit_blend(state, left, right, node->blend.alpha);
-        else assert(false && "Unexpected node opcode");
+        switch (node->opcode)
+        {
+            case FREP_UNION:     return emit_union(state, left, right);
+            case FREP_INTERSECT: return emit_intersect(state, left, right);
+            case FREP_SUBTRACT:  return emit_subtract(state, left, right);
+            case FREP_BLEND:     return emit_blend(state, left, right, node->blend.alpha);
+        }
     }
     else if (frep_is_primitive(node))
     {
-             if (node->opcode == FREP_BOX)       result = emit_box(state, node, R_root_to_this, T_this_rel_root);
-        else if (node->opcode == FREP_BOX_CHEAP) result = emit_box_cheap(state, node, R_root_to_this, T_this_rel_root);
-        else if (node->opcode == FREP_SPHERE)    result = emit_sphere(state, node, R_root_to_this, T_this_rel_root);
-        else if (node->opcode == FREP_CYLINDER)  result = emit_cylinder(state, node, R_root_to_this, T_this_rel_root);
-        else if (node->opcode == FREP_PLANE)     result = emit_plane(state, node, R_root_to_this, T_this_rel_root);
-        else assert(false && "Unexpected note opcode");
+        switch (node->opcode)
+        {
+            case FREP_BOX:       return emit_box(state, node, R_root_to_this, T_this_rel_root);
+            case FREP_BOX_CHEAP: return emit_box_cheap(state, node, R_root_to_this, T_this_rel_root);
+            case FREP_SPHERE:    return emit_sphere(state, node, R_root_to_this, T_this_rel_root);
+            case FREP_CYLINDER:  return emit_cylinder(state, node, R_root_to_this, T_this_rel_root);
+            case FREP_PLANE:     return emit_plane(state, node, R_root_to_this, T_this_rel_root);
+        }
     }
-    else
-    {
-        assert(false && "Unexpected node opcode");
-    }
-    return result;
+
+    assert(false && "Unexpected node opcode");
+    return -1;
+}
+
 }
 
 char *generate_ptx(frep_t *node, int *result_register)
 {
-    static char buffer[10*1024*1024];
-    ptx_t s;
+    static char *buffer = (char*)malloc(10*1024*1024);
+    assert(buffer && "Failed to allocate buffer to contain PTX output");
+    backend_ptx::ptx_t s;
     s.stream = buffer;
     s.next_register = 0;
-    *result_register = _generate_ptx(node, s);
+    *result_register = backend_ptx::_generate_ptx(node, s);
     return buffer;
-}
-
 }
