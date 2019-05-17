@@ -1,10 +1,8 @@
 #if defined(COMPUTE_CAPABILITY_3_X)
+// Kepler
 #error "Target devices of compute capability 3.x are not supported by the SASS backend."
 
-#elif defined(COMPUTE_CAPABILITY_5_X)
-#error "Target devices of compute capability 5.x are not supported by the SASS backend."
-
-#elif defined(COMPUTE_CAPABILITY_6_X)
+#elif defined(COMPUTE_CAPABILITY_5_X) || defined(COMPUTE_CAPABILITY_6_X)
 // Maxwell, Pascal (e.g. GTX 1080, Titan X)
 #include "sass_6_x/backend.h"
 
