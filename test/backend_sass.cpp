@@ -1,3 +1,4 @@
+#define COMPUTE_CAPABILITY_6_X
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -21,7 +22,7 @@ float frep_eval_sass(float x0, float y0, float z0, instruction_t *instructions, 
 
 void run_test(int test_number, frep_t *tree)
 {
-    instruction_blocks_t blocks = generate_sass(tree);
+    instruction_blocks_t blocks = generate_sass_blocks(tree);
 
     int num_instructions;
     instruction_t *instructions = schedule_blocks(blocks, &num_instructions);
