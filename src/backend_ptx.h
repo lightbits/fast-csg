@@ -1,33 +1,58 @@
+// Developed by Simen Haugo.
+// See LICENSE.txt for copyright and licensing details (standard MIT License).
+
+// This file contains the code generation backend for NVIDIA PTX, which is *not* a
+// machine code target, but described by NVIDIA as a "stable programming model and
+// instruction set for general purpose parallel programming". It is text-based code,
+// which is compiled into native target-architecture instructions by the CUDA driver.
+// Note that this compilation can take a long time. If you want to be able to rapidly
+// compile and upload FRep ASTs onto the GPU, have a look at the SASS backend, where
+// we implement our own native machine code generation.
+
+#pragma once
+
 #include "frep.h"
-#include "frep_transform.h"
 #include <stdint.h>
+#include <assert.h>
 
-namespace backend {
-namespace ptx {
+namespace backend_ptx {
 
-#if defined(PTX_CODEGEN_FP32)
+/*
+Nodes in the FRep AST have constants (such as sphere radius) that
+are involved in the expression for that node's membership function.
+When generating code to execute the membership function, constants
+can either be placed in Constants Memory (and must be fetched with
+an additional load), or be baked directly into the instructions.
+
+For example, the PTX instruction
+    add.ftz.f32 x, x, 0fBF000000;
+computes
+    x <- x + (-0.5)
+where (-0.5) is provided as an immediate value.
+
+However, not all instructions can use full 32-bit floating point
+immediate values. Notably, min, max and fused-multiply-add (FFMA)
+on Maxwell/Pascal target architectures. But all do support 20-bit
+floating point immediates, where the last 12 bits of the mantissa
+are truncated (assumed to be zero).
+
+You can choose whether you want to preserve 32-bit floating point
+constants at the expense of speed, or if you want to truncate the
+last 12 bits and use 20-bit floating point constants.
+*/
 uint32_t encode_f32(float x)
 {
+    #if defined(PTX_FP32_IMMEDIATE)
     return (*(uint32_t*)&x);
-}
-#elif defined(PTX_CODEGEN_FP20)
-uint32_t encode_f32(float x)
-{
-    // If we truncate the last 3 bytes of 32-bit fp mantissa, we
-    // can use the 20-bit immediate versions of instructions. There
-    // are 32-bit immediate versions for some, but not e.g. max/min.
-
-    // Note: ptx immediate values preserve their sign bit, unlike
+    #elif defined(PTX_FP20_IMMEDIATE)
+    // Note: PTX immediate values preserve their sign bit, unlike
     // SASS immediate values, which encode the sign bit elsewhere
     // in the instruction.
     return (*(uint32_t*)&x) & 0xFFFFF000;
+    #else
+    #error "You must #define either PTX_FP32_IMMEDIATE or PTX_FP20_IMMEDIATE before including this file."
+    #endif
 }
-#else
-#error "You must #define either PTX_CODEGEN_FP32 or PTX_CODEGEN_FP20 before including this file."
-// PTX_CODEGEN_FP20 truncates the last 3 bytes of 32-bit mantissa to use 20-bit immediate
-// versions of instructions (in Maxwell and Pascal SASS). There are not 32-bit immediate
-// versions for some instructions, like max/min.
-#endif
 
 struct ptx_t
 {
@@ -219,19 +244,20 @@ int emit_blend(ptx_t &s, int left, int right, float blend_alpha)
     return d;
 }
 
-int _generate_ptx(frep_t *node,
-                 ptx_t &state,
-                 frep_mat3_t R_root_to_parent=frep_identity_3x3,
-                 frep_vec3_t T_parent_rel_root=frep_null_3x1)
+int _generate_ptx(
+    frep_t *node,
+    ptx_t &state,
+    frep_mat3_t R_root_to_parent=frep_identity_3x3,
+    frep_vec3_t T_parent_rel_root=frep_null_3x1)
 {
     assert(node);
 
     frep_mat3_t R_root_to_this;
     frep_vec3_t T_this_rel_root;
-    frep_computeGlobalTransform(node, &R_root_to_this, &T_this_rel_root, R_root_to_parent, T_parent_rel_root);
+    frep_get_global_transform(node, &R_root_to_this, &T_this_rel_root, R_root_to_parent, T_parent_rel_root);
 
     int result = -1;
-    if (frep_isBoolean(node))
+    if (frep_is_boolean(node))
     {
         assert(node->left);
         assert(node->right);
@@ -243,7 +269,7 @@ int _generate_ptx(frep_t *node,
         else if (node->opcode == FREP_BLEND)         result = emit_blend(state, left, right, node->blend.alpha);
         else assert(false && "Unexpected node opcode");
     }
-    else if (frep_isPrimitive(node))
+    else if (frep_is_primitive(node))
     {
              if (node->opcode == FREP_BOX)       result = emit_box(state, node, R_root_to_this, T_this_rel_root);
         else if (node->opcode == FREP_BOX_CHEAP) result = emit_box_cheap(state, node, R_root_to_this, T_this_rel_root);
@@ -269,5 +295,4 @@ char *generate_ptx(frep_t *node, int *result_register)
     return buffer;
 }
 
-} // namespace ptx
-} // namespace backend
+}
