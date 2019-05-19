@@ -6,9 +6,14 @@
 #include "../src/frep_builder.h"
 #include "../src/frep_eval.h"
 #include "../src/backend_sass.h"
-#include "util/sass_6_x_mock.h"
+#include "../src/sass_6_x/simulator.h"
 
-float frep_eval_sass(float x0, float y0, float z0, instruction_t *instructions, int num_instructions, bool debug=false)
+using namespace backend_sass;
+
+float frep_eval_sass(
+    float x0, float y0, float z0,
+    instruction_t *instructions, int num_instructions,
+    bool debug=false)
 {
     static sass_simulator_t sim = {0};
     sim.init(debug);
@@ -22,7 +27,7 @@ float frep_eval_sass(float x0, float y0, float z0, instruction_t *instructions, 
 
 void run_test(int test_number, frep_t *tree)
 {
-    instruction_blocks_t blocks = generate_sass_blocks(tree);
+    instruction_blocks_t blocks = generate_blocks(tree);
 
     int num_instructions;
     instruction_t *instructions = schedule_blocks(blocks, &num_instructions);

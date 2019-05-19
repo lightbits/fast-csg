@@ -1,5 +1,7 @@
 #pragma once
 
+namespace backend_sass {
+
 struct sass_simulator_t
 {
     bool debug;
@@ -96,6 +98,7 @@ struct sass_simulator_t
     }
     void execute(instruction_t in)
     {
+        using namespace backend_sass;
         bool is_immediate =
             in.type == INSTRUCTION_FFMA20I ||
             in.type == INSTRUCTION_FMUL20I ||
@@ -139,3 +142,5 @@ struct sass_simulator_t
         if (debug) print_instruction(in);
     }
 };
+
+}

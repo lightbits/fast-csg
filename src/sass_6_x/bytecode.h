@@ -1,7 +1,6 @@
-#include <stdint.h>
-#include <stdio.h>
+#pragma once
 
-namespace sass {
+namespace backend_sass {
 
 uint64_t FADD_FTZ      = 0x0000100000000000;
 uint64_t FADD_NEG_A    = 0x0001000000000000;
@@ -310,3 +309,4 @@ e.g. instruction dst, op0 ("first"), op1, op2, op3 ("last")
 e.g. FFMA.FTZ R3, R4, R4, R0.reuse -> has reuse flag 0100
 e.g. FFMA.FTZ R3, R4.reuse, R4, R0 -> has reuse flag 0001
 */
+
