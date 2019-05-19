@@ -1,5 +1,4 @@
-#define STR(X) #X
-const char *ptx_template = STR(
+const char *ptx_template = R"str(
 .version 6.0
 .target sm_60
 .address_size 64
@@ -20,9 +19,9 @@ const char *ptx_template = STR(
     ld.param.u64 rd2, [param1];
     cvta.to.global.u64 rd3, rd2;
     cvta.to.global.u64 rd4, rd1;
-    mov.u32 r1, tid.x;         // threadIdx.x
-    mov.u32 r2, ctaid.x;       // blockIdx.x
-    mov.u32 r3, ntid.x;        // blockDim.x
+    mov.u32 r1, %%tid.x;         // threadIdx.x
+    mov.u32 r2, %%ctaid.x;       // blockIdx.x
+    mov.u32 r3, %%ntid.x;        // blockDim.x
     mad.lo.s32 r4, r3, r2, r1; // blockDim.x*blockIdx.x + threadIdx.x
     mul.wide.s32 rd5, r4, 16;  // sizeof(vec4)*(blockDim.x*blockIdx.x + threadIdx.x)
     add.s64 rd6, rd4, rd5;     // param0 + sizeof(vec4)*(blockDim.x*blockIdx.x + threadIdx.x)
@@ -33,5 +32,4 @@ const char *ptx_template = STR(
     st.global.f32 [rd8], d;
     ret;
 }
-);
-#undef STR
+)str";

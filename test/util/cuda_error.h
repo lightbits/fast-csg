@@ -461,7 +461,9 @@ void _cudaCheckError(T result, char const *const func, const char *const file, i
     {
         fprintf(stderr, "CUDA error at %s:%d code=%d(%s) \"%s\" \n",
                 file, line, static_cast<unsigned int>(result), cudaErrorToString(result), func);
-        cudaDeviceReset();
+        CUcontext ctx;
+        cuCtxGetCurrent(&ctx);
+        cuCtxDestroy(ctx);
         exit(EXIT_FAILURE);
     }
 }

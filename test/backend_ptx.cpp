@@ -1,10 +1,14 @@
+// Example compilation instructions for Linux, g++:
+// (Replace include directory with your installation and version of CUDA)
+// $ g++ -std=c++11 backend_ptx.cpp -I/usr/local/cuda-10.1/include -lcuda
+
 #define PTX_FP20_IMMEDIATE
 #include <iostream>
 #include <math.h>
 #include "../src/frep.h"
+#include "../src/frep_eval.h"
 #include "../src/frep_builder.h"
 #include "../src/backend_ptx.h"
-#include "util/test_models.h"
 #include "util/ptx_template.h"
 #include "util/ptxjit.h"
 
@@ -35,14 +39,14 @@ char *generate_ptx_program(frep_t *f, size_t *out_length)
 void run_test(int test_number, frep_t *f)
 {
     printf("///////////////////////////////////////////////////\n");
-    printf("                 test number %d\n", test_number);
+    printf("            running test number %d\n", test_number);
 
     const int num_points_x = 4;
     const int num_points_y = 4;
     const int num_points_z = 4;
     const int num_threads = 32;
-    const int num_blocks = num_points/num_threads;
     const int num_points = num_points_x*num_points_y*num_points_z;
+    const int num_blocks = num_points/num_threads;
     const int sizeof_input = num_points*4*sizeof(float);
     const int sizeof_output = num_points*1*sizeof(float);
 
@@ -80,7 +84,7 @@ void run_test(int test_number, frep_t *f)
     {
         size_t ptx_length;
         char *ptx_source = generate_ptx_program(f, &ptx_length);
-        ptxjit(input, sizeof_input,
+        RunPTX(input, sizeof_input,
                output, sizeof_output,
                ptx_source, ptx_length,
                "main",
@@ -112,7 +116,7 @@ void run_test(int test_number, frep_t *f)
 int main(int argc, char **argv)
 {
     frep_t *f = fBoxCheap(1.0f, 0.5f, 0.25f);
-    run_test(f);
+    run_test(1, f);
 
     return 0;
 }

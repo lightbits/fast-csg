@@ -36,11 +36,11 @@ void RunPTX(void *input, size_t sizeof_input,
             int jit_optimization_level=1 /*allowed values = 0,1,2,3,4*/)
 {
     _InitializeCUDA();
-    void *dev_input = NULL;
-    void *dev_output = NULL;
-    cudaCheckError(cudaMalloc(&dev_input, sizeof_input)); assert(dev_input);
-    cudaCheckError(cudaMalloc(&dev_output, sizeof_output)); assert(dev_output);
-    cudaCheckError(cudaMemcpy(dev_input, input, sizeof_input, cudaMemcpyHostToDevice));
+    CUdeviceptr dev_input;
+    CUdeviceptr dev_output;
+    cudaCheckError(cuMemAlloc(&dev_input, sizeof_input)); assert(dev_input);
+    cudaCheckError(cuMemAlloc(&dev_output, sizeof_output)); assert(dev_output);
+    cudaCheckError(cuMemcpyHtoD(dev_input, input, sizeof_input));
     CUmodule module = _LoadPTXFromString(ptx_source, ptx_source_length, jit_optimization_level);
     CUfunction kernel = 0;
     cudaCheckError(cuModuleGetFunction(&kernel, module, entry_name));
@@ -49,12 +49,13 @@ void RunPTX(void *input, size_t sizeof_input,
     void *kernel_params[] = { (void*)&param0, (void*)&param1 };
     cuLaunchKernel(kernel, num_blocks,1,1, num_threads,1,1, shared_memory_bytes, NULL, kernel_params, NULL);
     cudaCheckError(cuCtxSynchronize());
-    cudaCheckError(cudaMemcpy(output, dev_output, sizeof_output, cudaMemcpyDeviceToHost));
-    cudaCheckError(cudaFree(dev_output));
-    cudaCheckError(cudaFree(dev_input));
+    cudaCheckError(cuMemcpyDtoH(output, dev_output, sizeof_output));
+    cudaCheckError(cuMemFree(dev_output));
+    cudaCheckError(cuMemFree(dev_input));
     cudaCheckError(cuModuleUnload(module));
 }
 
+#if 0
 void RunCubin(void *input, size_t sizeof_input,
               void *output, size_t sizeof_output,
               const void *cubin, const char *entry_name,
@@ -80,6 +81,7 @@ void RunCubin(void *input, size_t sizeof_input,
     cudaCheckError(cudaFree(dev_input));
     cudaCheckError(cuModuleUnload(module));
 }
+#endif
 
 CUmodule _LoadPTXFromString(const char *ptx_source, size_t ptx_source_length, int jit_optimization_level)
 {
@@ -123,22 +125,26 @@ void _InitializeCUDA()
         return;
     has_init = true;
 
-    cudaDeviceReset();
-
-    assert(sizeof(void*) == 8 && "Assuming 64-bit machine");
-
     // disable CUDA from caching SASS programs
     setenv("CUDA_CACHE_DISABLE", "1", 1);
 
-    int device_id = 0;
-    int device_count;
-    cudaCheckError(cudaGetDeviceCount(&device_count));
-    assert(device_count >= 1 && "No CUDA capable devices found");
+    CUcontext context;
+    CUdevice device;
+    cudaCheckError(cuInit(0));
+    cudaCheckError(cuDeviceGet(&device, 0));
+    cudaCheckError(cuCtxCreate(&context, 0, device));
 
-    cudaDeviceProp prop;
-    cudaCheckError(cudaGetDeviceProperties(&prop, device_id));
-    assert(prop.computeMode != cudaComputeModeProhibited && "Device is running in Compute Mode Prohibited, no threads can use cudaSetDevice()");
-    assert(prop.major >= 1 && "GPU device does not support CUDA");
-    cudaCheckError(cudaSetDevice(device_id));
-    printf("Using CUDA Device %d: \"%s\n", device_id, prop.name);
+    char name[256];
+    int major = 0, minor = 0;
+    int compute_mode = -1;
+
+    cudaCheckError(cuDeviceGetName(name, 100, device));
+    cudaCheckError(cuDeviceGetAttribute(
+        &major, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, device));
+    cudaCheckError(cuDeviceGetAttribute(
+        &minor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, device));
+    cudaCheckError(cuDeviceGetAttribute(
+        &compute_mode, CU_DEVICE_ATTRIBUTE_COMPUTE_MODE, device));
+    assert(compute_mode != CU_COMPUTEMODE_PROHIBITED && "Device is running in Compute Mode Prohibited");
+    printf("Using CUDA device %s: Compute SM %d.%d\n", name, major, minor);
 }
