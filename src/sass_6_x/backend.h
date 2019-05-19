@@ -32,6 +32,8 @@
 #include <stdint.h>
 #include <assert.h>
 
+namespace backend_sass {
+
 enum latency_constants_
 {
     // All the 32-bit floating point instructions (except sqrt) take exactly
@@ -533,3 +535,16 @@ instruction_blocks_t generate_sass_blocks(frep_t *node)
     result.num_blocks = num_blocks;
     return result;
 }
+
+}
+
+#if 0
+void *frep_compile_to_sass(frep_t *tree, size_t *length)
+{
+    using namespace backend_sass;
+    instruction_blocks_t blocks = generate_sass_blocks(tree);
+
+    int num_instructions;
+    instruction_t *instructions = schedule_blocks(blocks, &num_instructions);
+}
+#endif
