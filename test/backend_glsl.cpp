@@ -4,6 +4,6 @@
 int main() {
     frep_t *f = fBoxCheap(1.0f, 0.5f, 0.25f);
     f = fOpUnion(f, fBox(2.0f, 1.0f, 1.0f));
-    char *s = generate_glsl(f);
+    char *s = frep_compile_to_glsl(f);
     printf("%s\n", s);
 }

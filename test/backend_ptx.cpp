@@ -65,7 +65,7 @@ char *generate_ptx_program(frep_t *f, size_t *out_length)
     static char buffer[10*1024*1024];
     char *stream = buffer;
     int result_register;
-    char *ptx = generate_ptx(f, &result_register);
+    char *ptx = frep_compile_to_ptx(f, &result_register);
     stream += sprintf(stream, ptx_template, result_register, result_register, ptx);
     *out_length = (stream - buffer);
     return buffer;

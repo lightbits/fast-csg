@@ -26,7 +26,7 @@ are assumed to be in registers named "x0", "y0", and "z0".
 See test/backend_ptx.cpp for an example of a complete PTX program
 that uses the generated output.
 */
-char *generate_ptx(frep_t *f, int *result_register);
+char *frep_compile_to_ptx(frep_t *f, int *result_register);
 
 //////////////////////////////////////////////////////////////////
 //                       Implementation
@@ -263,7 +263,7 @@ int emit_blend(ptx_t &s, int left, int right, float blend_alpha)
     return d;
 }
 
-int _generate_ptx(
+int _frep_compile_to_ptx(
     frep_t *node,
     ptx_t &state,
     frep_mat3_t R_root_to_parent=frep_identity_3x3,
@@ -280,8 +280,8 @@ int _generate_ptx(
     {
         assert(node->left);
         assert(node->right);
-        int left = _generate_ptx(node->left, state, R_root_to_this, T_this_rel_root);
-        int right = _generate_ptx(node->right, state, R_root_to_this, T_this_rel_root);
+        int left = _frep_compile_to_ptx(node->left, state, R_root_to_this, T_this_rel_root);
+        int right = _frep_compile_to_ptx(node->right, state, R_root_to_this, T_this_rel_root);
         switch (node->opcode)
         {
             case FREP_UNION:     return emit_union(state, left, right);
@@ -308,7 +308,7 @@ int _generate_ptx(
 
 }
 
-char *generate_ptx(frep_t *node, int *result_register)
+char *frep_compile_to_ptx(frep_t *node, int *result_register)
 {
     using namespace backend_ptx;
     static char *buffer = (char*)malloc(10*1024*1024);
@@ -316,6 +316,6 @@ char *generate_ptx(frep_t *node, int *result_register)
     ptx_t s;
     s.stream = buffer;
     s.next_register = 0;
-    *result_register = _generate_ptx(node, s);
+    *result_register = _frep_compile_to_ptx(node, s);
     return buffer;
 }

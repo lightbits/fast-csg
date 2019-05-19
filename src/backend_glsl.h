@@ -23,7 +23,7 @@
 //     float fCylinder(vec3 p, float r, float h);
 //     float fSphere(vec3 p, float r, float h);
 //
-char *generate_glsl(frep_t *f);
+char *frep_compile_to_glsl(frep_t *f);
 
 //////////////////////////////////////////////////////////////////
 //                       Implementation
@@ -37,7 +37,7 @@ struct glsl_t
     char *stream;
 };
 
-int _generate_glsl(frep_t *node,
+int _frep_compile_to_glsl(frep_t *node,
                    glsl_t &s,
                    frep_mat3_t R_root_to_parent=frep_identity_3x3,
                    frep_vec3_t T_parent_rel_root=frep_null_3x1)
@@ -79,8 +79,8 @@ int _generate_glsl(frep_t *node,
         assert(node->left);
         assert(node->right);
 
-        int i_left = _generate_glsl(node->left, s, R_root_to_this, T_this_rel_root);
-        int i_right = _generate_glsl(node->right, s, R_root_to_this, T_this_rel_root);
+        int i_left = _frep_compile_to_glsl(node->left, s, R_root_to_this, T_this_rel_root);
+        int i_right = _frep_compile_to_glsl(node->right, s, R_root_to_this, T_this_rel_root);
 
         s.stream += sprintf(s.stream, "float d%d = ", my_index);
 
@@ -116,7 +116,7 @@ int _generate_glsl(frep_t *node,
 
 }
 
-char *generate_glsl(frep_t *node)
+char *frep_compile_to_glsl(frep_t *node)
 {
     using namespace backend_glsl;
     static char *buffer = (char*)malloc(10*1024*1024);
@@ -124,6 +124,6 @@ char *generate_glsl(frep_t *node)
     glsl_t s;
     s.stream = buffer;
     s.destination = 1;
-    _generate_glsl(node, s);
+    _frep_compile_to_glsl(node, s);
     return buffer;
 }
