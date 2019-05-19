@@ -1,3 +1,6 @@
+#pragma once
+#include <cuda_runtime.h>
+
 static const char *cudaErrorToString(CUresult error)
 {
     switch (error)

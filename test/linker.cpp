@@ -6,13 +6,17 @@
 
 // Compilation instructions (Linux, g++):
 // g++ -std=c++11 linker.cpp -I/usr/local/cuda-10.1/include -lcuda
-#include "util/ptxjit.h"
+#include <stdio.h>
+#include <assert.h>
+#include <cuda.h>
+#include "util/cuda_error.h"
+#include "util/init_cuda.h"
 #include "util/read_file.h"
 #define ENABLE_TIMING
 #include "util/profiler.h"
 
 int main() {
-    _InitializeCUDA();
+    init_cuda();
 
     system("/usr/local/cuda-10.1/bin/ptxas --opt-level 1 --compile-only --gpu-name sm_60 test1.ptx --output-file test1.cubin");
     system("/usr/local/cuda-10.1/bin/ptxas --opt-level 1 --compile-only --gpu-name sm_60 test2.ptx --output-file test2.cubin");
