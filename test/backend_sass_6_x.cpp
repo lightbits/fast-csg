@@ -1,140 +1,115 @@
-// Compile .cu source file to .ptx
-//  nvcc -ptx source.cu --gpu-architecture=sm_60 --use_fast_math
-// Compile .ptx to cubin
-//  ptxas --opt-level 1 --gpu-name sm_60 source.ptx --output-file source.cubin
-// Disassemble cubin
-//  nvdisasm -hex source.cubin > source.nvdisasm
-
-// ptxas --opt-level 3 --gpu-name sm_60 test4.ptx --output-file disasm_samples/test4.cubin && ptxas --opt-level 3 --gpu-name sm_60 test5.ptx --output-file disasm_samples/test5.cubin && ptxas --opt-level 3 --gpu-name sm_60 test6.ptx --output-file disasm_samples/test6.cubin && ptxas --opt-level 3 --gpu-name sm_60 test7.ptx --output-file disasm_samples/test7.cubin
-// nvdisasm -hex disasm_samples/test4.cubin > disasm_samples/test4.nvdisasm && nvdisasm -hex disasm_samples/test5.cubin > disasm_samples/test5.nvdisasm && nvdisasm -hex disasm_samples/test6.cubin > disasm_samples/test6.nvdisasm && nvdisasm -hex disasm_samples/test7.cubin > disasm_samples/test7.nvdisasm
-
 #include <iostream>
-#include <math.h>
-#include <string.h>
 #include <stdio.h>
 #include <cuda.h>
-#include <cuda_runtime.h>
-#include <stdint.h>
-#include "cuda_error.h"
-#define ENABLE_TIMING
-#include "profiler.h"
-#include "point_data/points3.h"
+#include "util/cuda_error.h"
+#include "util/init_cuda.h"
+#include "../src/frep.h"
+#include "../src/frep_eval.h"
+#include "../src/frep_builder.h"
+#include "../src/backend_sass.h"
 
-#define CUBIN_FILENAME         "../codegen/disasm_samples/test5.cubin"
-#define PATCHED_CUBIN_FILENAME "../codegen/disasm_samples/test5.patched.cubin"
-#define CUBIN_ENTRYPOINT       "test"
-
-#define Assert(Expression) if (!(Expression)) { fprintf(stderr, "Assertation failed \"%s\" in file %s line %d\n", #Expression, __FILE__, __LINE__); cudaDeviceReset(); exit(EXIT_FAILURE); }
-
-CUmodule LoadCubinFromFile(const char *filename)
-{
-    char *cubin;
-    {
-        FILE *f = fopen(filename, "rb");
-        Assert(f);
-        fseek(f, 0, SEEK_END);
-        long size = ftell(f);
-        rewind(f);
-        cubin = new char[size + 1];
-        int ok = fread(cubin, 1, size, f);
-        Assert(ok);
-        cubin[size] = 0;
-        fclose(f);
-    }
-    CUmodule module;
-    cudaCheckError(cuModuleLoadData(&module, cubin)); Assert(module);
-    // todo: can we free cubin here? see cuModuleLoadData, cuLink* in Driver API
-    return module;
-}
-
-void InitializeCUDA()
-{
-    int device_id = 0; // always choose device index 0... change this if you have multiple devices
-    int device_count;
-    cudaCheckError(cudaGetDeviceCount(&device_count));
-    Assert(device_count >= 1 && "No CUDA capable devices found");
-
-    cudaDeviceProp prop;
-    cudaCheckError(cudaGetDeviceProperties(&prop, device_id));
-    Assert(prop.computeMode != cudaComputeModeProhibited && "Device is running in Compute Mode Prohibited, no threads can use cudaSetDevice()");
-    Assert(prop.major >= 1 && "GPU device does not support CUDA");
-    cudaCheckError(cudaSetDevice(device_id));
-    printf("Using CUDA Device %d: \"%s\n", device_id, prop.name);
-}
+CUmodule link_sass(CUmodule *module,
+                   void *cubin1, size_t sizeof_cubin1,
+                   void *cubin2, size_t sizeof_cubin2);
 
 int main(int argc, char **argv)
 {
     setenv("CUDA_CACHE_DISABLE", "1", 1);
-    InitializeCUDA();
+    init_cuda();
 
-    enum { num_threads = 32 };
-    enum { num_blocks  = NUM_POINTS/num_threads };
-    enum { num_output = 1 };
-    enum { sizeof_input = NUM_POINTS*4*sizeof(float) };
-    enum { sizeof_output = NUM_POINTS*sizeof(float)*num_output };
+    system("/usr/local/cuda-10.1/bin/nvcc "
+           "--gpu-architecture=sm_60 "
+           "--cubin "
+           "--relocatable-device-code=true "
+           "main.cu "
+           "--output-file main.cubin");
 
-    const float *input = points;
-    float *output = (float*)malloc(sizeof_output); Assert(output);
-    void *dev_input = NULL;
-    void *dev_output = NULL;
-    cudaCheckError(cudaMalloc(&dev_input, sizeof_input)); Assert(dev_input);
-    cudaCheckError(cudaMalloc(&dev_output, sizeof_output)); Assert(dev_output);
-    cudaCheckError(cudaMemcpy(dev_input, input, sizeof_input, cudaMemcpyHostToDevice));
+    size_t sizeof_cubin_main;
+    void *cubin_main = read_file("main.cubin", &sizeof_cubin_main);
 
-    for (int which = 0; which < 2; which++)
+    frep_t *tree = fBoxCheap(1.0f, 0.5f, 0.25f);
+
+    size_t sizeof_cubin_tree;
+    void *cubin_tree = frep_compile_to_sass(tree, &sizeof_cubin_tree);
+
+    CUmodule module = 0;
+    link_sass(&module, cubin_main, sizeof_cubin_main, cubin_tree, sizeof_cubin_tree);
+
+    CUfunction kernel;
+    cudaCheckError(cuModuleGetFunction(&kernel, module, "main")); assert(kernel);
+
+    //
+    // finally we run the thing to make sure that it actually works.
+    //
+    int N = 32;
+    size_t sizeof_input = 4*N*sizeof(float);
+    size_t sizeof_output = N*sizeof(float);
+    float *input = (float*)malloc(sizeof_input);
+    float *output = (float*)malloc(sizeof_output);
+
+    for (int i = 0; i < N; i++)
     {
-        CUmodule module;
-        if (which == 0)
-        {
-            module = LoadCubinFromFile(CUBIN_FILENAME);
-            printf("Running original binary...\n");
-        }
-        else
-        {
-            TIMING("cubin");
-            module = LoadCubinFromFile(PATCHED_CUBIN_FILENAME);
-            TIMING("cubin");
-            printf("Running patched binary...\n");
-        }
-        CUfunction kernel = 0;
-        cudaCheckError(cuModuleGetFunction(&kernel, module, CUBIN_ENTRYPOINT));
-
-        uint64_t param0 = (uint64_t)(dev_input);
-        uint64_t param1 = (uint64_t)(dev_output);
-        void *kernel_params[] = { (void*)&param0, (void*)&param1 };
-        int shared_memory_bytes = 1024;
-        cuLaunchKernel(kernel, num_blocks,1,1, num_threads,1,1, shared_memory_bytes, NULL, kernel_params, NULL);
-        cudaCheckError(cuCtxSynchronize());
-        cudaCheckError(cudaMemcpy(output, dev_output, sizeof_output, cudaMemcpyDeviceToHost));
-        cudaCheckError(cuModuleUnload(module));
-
-        for (int j = 0; j < NUM_POINTS && j < 16; j++)
-        {
-            float x = input[4*j+0];
-            float y = input[4*j+1];
-            float z = input[4*j+2];
-            #if 0
-            float r0 = x*y;
-            float r1 = y*z;
-            float r3 = z*z;
-            float r4 = r0*r1 + r3;
-            #endif
-            #if 0
-            float r5 = y*y;
-            float r4 = r5 + z;
-            #endif
-            #if 1
-            float r4 = 2*sqrtf(y*y);
-            #endif
-            printf("%d: %f %f\n", j, output[j], r4);
-        }
+        input[4*i + 0] = 1.0f;
+        input[4*i + 1] = 0.0f;
+        input[4*i + 2] = 0.0f;
+        input[4*i + 3] = 0.0f;
     }
 
-    cudaCheckError(cudaFree(dev_output));
-    cudaCheckError(cudaFree(dev_input));
-    free(output);
+    int num_blocks = 8;
+    int num_threads = 4;
+    int shared_memory_bytes = 1024;
+    CUdeviceptr dev_input;
+    CUdeviceptr dev_output;
+    cudaCheckError(cuMemAlloc(&dev_input, sizeof_input)); assert(dev_input);
+    cudaCheckError(cuMemAlloc(&dev_output, sizeof_output)); assert(dev_output);
+    cudaCheckError(cuMemcpyHtoD(dev_input, input, sizeof_input));
+    uint64_t param0 = (uint64_t)(dev_input);
+    uint64_t param1 = (uint64_t)(dev_output);
+    void *kernel_params[] = { (void*)&param0, (void*)&param1 };
+    cuLaunchKernel(kernel, num_blocks,1,1, num_threads,1,1, shared_memory_bytes, NULL, kernel_params, NULL);
+    cudaCheckError(cuCtxSynchronize());
+    cudaCheckError(cuMemcpyDtoH(output, dev_output, sizeof_output));
+    cudaCheckError(cuMemFree(dev_output));
+    cudaCheckError(cuMemFree(dev_input));
 
-    TIMING_SUMMARY();
+    cudaCheckError(cuModuleUnload(module));
+
+    printf("output:\n");
+    for (int i = 0; i < N; i++)
+        printf("%f ", output[i]);
 
     return 0;
+}
+
+void link_sass(CUmodule *module,
+               void *cubin1, size_t sizeof_cubin1,
+               void *cubin2, size_t sizeof_cubin2)
+{
+    enum { num_options = 6 };
+    CUjit_option options[num_options];
+    void *option_values[num_options];
+    char error_log[8192];
+    char info_log[8192];
+    options[0] = CU_JIT_INFO_LOG_BUFFER;             option_values[0] = (void *) info_log;
+    options[1] = CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES;  option_values[1] = (void *) (long)sizeof(info_log);
+    options[2] = CU_JIT_ERROR_LOG_BUFFER;            option_values[2] = (void *) error_log;
+    options[3] = CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES; option_values[3] = (void *) (long)sizeof(error_log);
+    options[4] = CU_JIT_LOG_VERBOSE;                 option_values[4] = (void *) 1;
+    options[5] = CU_JIT_TARGET;                      option_values[5] = (void *) CU_TARGET_COMPUTE_60;
+    CUlinkState link_state;
+    cudaCheckError(cuLinkCreate(num_options, options, option_values, &link_state));
+
+    if (CUDA_SUCCESS != cuLinkAddData(link_state, CU_JIT_INPUT_CUBIN,
+        (void *)cubin_main, sizeof_cubin_main, 0,0,0,0))
+        fprintf(stderr, "nvlink error:\n%s\n", error_log);
+
+    if (CUDA_SUCCESS != cuLinkAddData(link_state, CU_JIT_INPUT_CUBIN,
+        (void *)cubin_tree, sizeof_cubin_tree, 0,0,0,0))
+        fprintf(stderr, "nvlink error:\n%s\n", error_log);
+
+    void *cubin;
+    size_t cubin_size;
+    cudaCheckError(cuLinkComplete(link_state, &cubin, &cubin_size));
+    cudaCheckError(cuModuleLoadData(module, cubin)); assert(module);
+    cudaCheckError(cuLinkDestroy(link_state));
 }
