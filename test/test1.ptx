@@ -1,0 +1,8 @@
+.version 6.0
+.target sm_60
+.address_size 64
+
+.visible .func (.reg.f32 f1) tree(.reg.f32 x0, .reg.f32 y0, .reg.f32 z0) {
+    mov.f32 f1, 3.14;
+    ret.uni;
+}
