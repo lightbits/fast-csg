@@ -2,26 +2,30 @@
 
 namespace backend_sass {
 
+//
+// Instruction flags
+//
+// Meaning:
+// FTZ = Flush to zero
+// NEG_A = Use negated value of a operand
+// NEG_B = Use negated value of b operand
+// ABS_A = Use absolute value of a operand
+// ABS_B = Use absolute value of b operand
 uint64_t FADD_FTZ      = 0x0000100000000000;
 uint64_t FADD_NEG_A    = 0x0001000000000000;
 uint64_t FADD_NEG_B    = 0x0000200000000000;
 uint64_t FADD_ABS_A    = 0x0000400000000000;
 uint64_t FADD_ABS_B    = 0x0002000000000000;
-
 uint64_t FADD32I_FTZ   = 0x0080000000000000;
 uint64_t FADD32I_ABS_A = 0x0040000000000000;
-
 uint64_t FMUL_FTZ      = 0x0000100000000000;
 uint64_t FMUL_NEG_B    = 0x0001000000000000;
-
 uint64_t FMUL32I_FTZ   = 0x0020000000000000;
-
 uint64_t FMNMX_FTZ     = 0x0000100000000000;
 uint64_t FMNMX_NEG_A   = 0x0001000000000000;
 uint64_t FMNMX_NEG_B   = 0x0000200000000000;
 uint64_t FMNMX_ABS_A   = 0x0000400000000000;
 uint64_t FMNMX_ABS_B   = 0x0002000000000000;
-
 uint64_t FFMA_FTZ      = 0x0020000000000000;
 uint64_t FFMA_NEG_B    = 0x0001000000000000;
 uint64_t FFMA_NEG_C    = 0x0002000000000000;
