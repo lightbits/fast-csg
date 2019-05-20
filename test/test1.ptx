@@ -3,6 +3,16 @@
 .address_size 64
 
 .visible .func (.reg.f32 f1) tree(.reg.f32 x0, .reg.f32 y0, .reg.f32 z0) {
-    mov.f32 f1, 3.14;
+	.reg.f32 x;
+	.reg.f32 y;
+	.reg.f32 z;
+	abs.f32.ftz x, x0;
+	abs.f32.ftz y, y0;
+	abs.f32.ftz z, z0;
+	sub.f32.ftz x,x,1.0;
+	sub.f32.ftz y,y,0.5;
+	sub.f32.ftz z,z,0.25;
+	max.f32.ftz f1,x,y;
+	max.f32.ftz f1,f1,z;
     ret.uni;
 }
