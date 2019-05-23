@@ -39,6 +39,7 @@
 #include "blocks.h"
 #include "bytecode.h"
 
+#if 0
 uint64_t get_ctrl_segment(instruction_t i)
 {
     uint8_t ra,rb,rc,rd;
@@ -162,3 +163,4 @@ void *frep_compile_to_sass(frep_t *tree, size_t *length)
 
     assert(cubin);
 }
+#endif
