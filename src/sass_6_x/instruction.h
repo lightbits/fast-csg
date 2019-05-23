@@ -29,7 +29,7 @@ enum latency_constants_
 
 enum instruction_type_t
 {
-    INSTRUCTION_FFMA=0,
+    INSTRUCTION_FFMA,
     INSTRUCTION_FMUL,
     INSTRUCTION_FADD,
     INSTRUCTION_FFMA20I,

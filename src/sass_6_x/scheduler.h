@@ -65,8 +65,8 @@ schedule_blocks(instruction_blocks_t blocks, int *return_num_instructions)
         int d_left = blocks.blocks[i].d_left;
         int d_right = blocks.blocks[i].d_right;
 
-        static uint8_t register_map[256] = {0};
-        // register_map[NO_REGISTER]      =
+        static uint8_t register_map[NUM_NAMED_REGISTERS] = {0};
+        register_map[NO_REGISTER]      = 0xff;
         register_map[REGISTER_X0]      = 0x00;
         register_map[REGISTER_Y0]      = 0x01;
         register_map[REGISTER_Z0]      = 0x02;
@@ -77,7 +77,7 @@ schedule_blocks(instruction_blocks_t blocks, int *return_num_instructions)
         register_map[REGISTER_D]       = 0x07 + d;
         register_map[REGISTER_D_LEFT]  = 0x07 + d_left;
         register_map[REGISTER_D_RIGHT] = 0x07 + d_right;
-        register_map[REGISTER_RZ]      = 0xff;
+        register_map[REGISTER_RZ] = 0xff;
 
         for (int j = 0; j < blocks.blocks[i].num_instructions; j++)
         {
@@ -91,9 +91,9 @@ schedule_blocks(instruction_blocks_t blocks, int *return_num_instructions)
             in->readb = 7;
             in->wrtdb = 7;
             in->yield = 0;
-            if (wait_barrier.is_set(in->ra)) { in->watdb |= wait_barrier.wait(in->ra); }
-            if (wait_barrier.is_set(in->rb)) { in->watdb |= wait_barrier.wait(in->rb); }
-            if (wait_barrier.is_set(in->rc)) { in->watdb |= wait_barrier.wait(in->rc); }
+            if (in->a != NO_REGISTER && wait_barrier.is_set(in->ra)) { in->watdb |= wait_barrier.wait(in->ra); }
+            if (in->b != NO_REGISTER && wait_barrier.is_set(in->rb)) { in->watdb |= wait_barrier.wait(in->rb); }
+            if (in->c != NO_REGISTER && wait_barrier.is_set(in->rc)) { in->watdb |= wait_barrier.wait(in->rc); }
 
             // if we the instruction doesn't have a stall count set already
             // we set it to the latency of the instruction.
