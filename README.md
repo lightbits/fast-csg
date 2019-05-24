@@ -1,5 +1,7 @@
 # fast-csg
 
+![](doc/overview-small.svg)
+
 A compiler for functional representations (see e.g. OpenSCAD, libfive, Hyperfun) that directly generates executable bytecode instructions for GPU architectures.
 
 It gives you the benefit of fast tree evaluation as the tree structure is compiled into optimized machine code instructions (which makes the program compute-limited, not memory bandwidth-limited), while avoiding the long compile times that you would get by compiling to an intermediate target, such as GLSL, PTX, CUDA or NVVM IR.
