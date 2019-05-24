@@ -6,7 +6,7 @@ A compiler for functional representations (see e.g. OpenSCAD, libfive, Hyperfun)
 
 It gives you the benefit of fast tree evaluation as the tree structure is compiled into optimized machine code instructions (which makes the program compute-limited, not memory bandwidth-limited), while avoiding the long compile times that you would get by compiling to an intermediate target, such as GLSL, PTX, CUDA or NVVM IR.
 
-Unlike NVIDIA's closed-source PTX->SASS compiler, we focus on compilation speed, aiming for sub-millisecond time from compilation start to having the kernel uploaded to the GPU and ready to run.
+Unlike NVIDIA's closed-source compiler chain, we focus on compilation speed, aiming for sub-millisecond time from compilation start to having the kernel uploaded to the GPU and ready to run.
 
 Possible applications:
 
