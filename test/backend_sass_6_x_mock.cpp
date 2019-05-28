@@ -17,12 +17,12 @@ float frep_eval_sass(
 {
     static sass_simulator_t sim = {0};
     sim.init(debug);
-    sim.reg[REGISTER_X0] = x0;
-    sim.reg[REGISTER_Y0] = y0;
-    sim.reg[REGISTER_Z0] = z0;
+    sim.reg[0x00] = x0;
+    sim.reg[0x01] = y0;
+    sim.reg[0x02] = z0;
     for (int i = 0; i < num_instructions; i++)
         sim.execute(instructions[i]);
-    return sim.reg[REGISTER_D+0];
+    return sim.reg[0x07];
 }
 
 void run_test(int test_number, frep_t *tree)
